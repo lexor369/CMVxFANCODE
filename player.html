@@ -127,27 +127,21 @@
   <div id="player"></div>
   
   <script>
-    // Get the modal and buttons
     const modal = document.getElementById('telegram-modal');
     const joinBtn = document.getElementById('join-btn');
     const alreadyJoinedBtn = document.getElementById('already-joined-btn');
-
-    // Get raw stream URL from the query parameter
     const rawStreamUrl = new URLSearchParams(window.location.search).get("stream");
 
-    // Function to set up the player
     function setupPlayer() {
       if (!rawStreamUrl) {
         showError("Error: No stream URL provided.");
         return;
       }
       
-      // --- THIS IS THE FIX ---
-      // Instead of playing the raw URL, we pass it to our /proxy function
       const proxyStreamUrl = `/proxy?url=${encodeURIComponent(rawStreamUrl)}`;
       
       jwplayer("player").setup({
-        file: proxyStreamUrl, // <-- FIXED
+        file: proxyStreamUrl,
         autostart: true,
         mute: false,
         width: "100%",
@@ -158,37 +152,29 @@
         hlshtml: true,
       });
 
-      // Error handling
       jwplayer("player").on('error', function(e) {
         console.error("JWPlayer error:", e);
         showError("This stream could not be loaded.");
       });
     }
 
-    // Function to show an error message in the player
     function showError(message) {
       const playerElement = document.getElementById('player');
       playerElement.innerHTML = `<div style="color:white; text-align:center; padding-top: 40vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1.2rem;">${message}</div>`;
     }
 
-    // --- Modal Logic ---
-    
-    // Show the modal on page load
     modal.style.display = 'flex';
 
-    // When "Already Joined" is clicked:
     alreadyJoinedBtn.addEventListener('click', () => {
-      modal.style.display = 'none'; // Hide modal
-      setupPlayer(); // Start player
+      modal.style.display = 'none';
+      setupPlayer();
     });
 
-    // When "Join" is clicked:
     joinBtn.addEventListener('click', () => {
-      // Hide modal after a short delay to let them join
       setTimeout(() => {
         modal.style.display = 'none';
         setupPlayer();
-      }, 1000); // 1 second delay
+      }, 1000);
     });
     
   </script>
