@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CMV LIVE Player</title> <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: black;
+      overflow: hidden; /* Prevent scrollbars */
+    }
+    
+    #player {
+      width: 100%;
+      height: 100vh; /* Make player fill the viewport height */
+      background: black;
+    }
+
+    /* --- ADDED: Telegram Modal Styles --- */
+    .telegram-modal {
+      display: none; /* Hidden by default */
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-box {
+      background: #1f1f1f;
+      color: white;
+      padding: 25px 30px;
+      border-radius: 12px;
+      text-align: center;
+      width: 90%;
+      max-width: 350px;
+      font-family: Arial, sans-serif;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    }
+
+    .modal-box h3 {
+      margin: 0 0 15px;
+      font-size: 1.3rem;
+    }
+
+    .modal-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-btn {
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .join-btn {
+      background-color: #0088cc;
+      color: white;
+    }
+    .join-btn:hover {
+      background-color: #00aaff;
+    }
+
+    .joined-btn {
+      background-color: #444;
+      color: #ddd;
+    }
+    .joined-btn:hover {
+      background-color: #555;
+    }
+    /* --- End of Modal Styles --- */
+
+  </style>
+  <script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
+</head>
+<body>
+
+  <div id="telegram-modal" class="telegram-modal">
+    <div class="modal-box">
+      <h3>Join our Telegram channel for more updates</h3>
+      <div class="modal-buttons">
+        <a id="join-btn" class="modal-btn join-btn" href="https://t.me/cricketmemesverse873" target="_blank">
+          Join
+        </a>
+        <button id="already-joined-btn" class="modal-btn joined-btn">
+          Already Joined
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="player"></div>
+  
+  <script>
+    // Get the modal and buttons
+    const modal = document.getElementById('telegram-modal');
+    const joinBtn = document.getElementById('join-btn');
+    const alreadyJoinedBtn = document.getElementById('already-joined-btn');
+
+    // Get stream URL from the query parameter
+    // CHANGED: Simplified this to get the raw URL directly
+    const streamUrl = new URLSearchParams(window.location.search).get("stream");
+
+    // Function to set up the player
+    function setupPlayer() {
+      if (!streamUrl) {
+        alert("Error: No stream URL provided.");
+        return;
+      }
+      
+      jwplayer("player").setup({
+        file: streamUrl,
+        autostart: true,
+        mute: false,
+        width: "100%",
+        height: "100%",
+        stretching: "uniform",
+        controls: true,
+        primary: "html5",
+        hlshtml: true,
+      });
+
+      // ✅ Error handling
+      jwplayer("player").on('error', function(e) {
+        console.error("JWPlayer error:", e);
+        // You can notify the user that the stream failed
+        const playerElement = document.getElementById('player');
+        playerElement.innerHTML = `<div style="color:white; text-align:center; padding-top: 40vh; font-family: Arial, sans-serif; font-size: 1.2rem;">This stream could not be loaded.</div>`;
+      });
+    }
+
+    // --- ADDED: Modal Logic ---
+    
+    // Show the modal on page load
+    modal.style.display = 'flex';
+
+    // When "Already Joined" is clicked:
+    alreadyJoinedBtn.addEventListener('click', () => {
+      // 1. Hide the modal
+      modal.style.display = 'none';
+      // 2. Set up and start the player
+      setupPlayer();
+    });
+
+    // Optional: If they click "Join", you might want to start the player too
+    // after a short delay, assuming they've joined.
+    joinBtn.addEventListener('click', () => {
+      setTimeout(() => {
+        modal.style.display = 'none';
+        setupPlayer();
+      }, 1000); // Wait 1 second before starting player
+    });
+    
+  </script>
+</body>
+</html>
+
