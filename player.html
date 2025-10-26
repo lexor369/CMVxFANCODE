@@ -11,111 +11,43 @@
       margin: 0;
       height: 100%;
       background: black;
-      overflow: hidden; /* Prevent scrollbars */
+      overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
-    
-    #player-container { /* Renamed container for clarity */
+    #player-container {
       width: 100%;
-      height: 100vh; /* Make player fill the viewport height */
+      height: 100vh;
       background: black;
     }
-    
-    /* Ensure Plyr fills container */
-    .plyr {
-       height: 100%;
-    }
-
-    /* Telegram Modal Styles */
+    .plyr { height: 100%; }
     .telegram-modal {
-      display: none; 
-      position: fixed;
-      z-index: 9999;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(5px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px);
+      display: flex; justify-content: center; align-items: center;
     }
-
     .modal-box {
-      background: linear-gradient(135deg, #2a2a3e 0%, #1f1f2b 100%);
-      color: white;
-      padding: 25px 30px;
-      border-radius: 16px;
-      text-align: center;
-      width: 90%;
-      max-width: 350px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(135deg, #2a2a3e 0%, #1f1f2b 100%); color: white;
+      padding: 25px 30px; border-radius: 16px; text-align: center; width: 90%; max-width: 350px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255, 255, 255, 0.1);
     }
-
-    .modal-box h3 {
-      margin: 0 0 15px;
-      font-size: 1.4rem;
-      font-weight: 700;
-      line-height: 1.4;
-    }
-    
-    .modal-box p {
-      margin: 0 0 20px;
-      font-size: 0.95rem;
-      color: #b0b0c0;
-    }
-
-    .modal-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
+    .modal-box h3 { margin: 0 0 15px; font-size: 1.4rem; font-weight: 700; line-height: 1.4; }
+    .modal-box p { margin: 0 0 20px; font-size: 0.95rem; color: #b0b0c0; }
+    .modal-buttons { display: flex; flex-direction: column; gap: 12px; }
     .modal-btn {
-      padding: 13px;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
+      padding: 13px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600;
+      cursor: pointer; text-decoration: none; transition: all 0.2s ease;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
     }
-
     .join-btn {
-      background: linear-gradient(90deg, #0088cc, #00aaff);
-      color: white;
+      background: linear-gradient(90deg, #0088cc, #00aaff); color: white;
       box-shadow: 0 4px 15px rgba(0, 150, 255, 0.3);
     }
-    .join-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 150, 255, 0.4);
-    }
-
+    .join-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 150, 255, 0.4); }
     .joined-btn {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: #ddd;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      background-color: rgba(255, 255, 255, 0.1); color: #ddd; border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    .joined-btn:hover {
-      background-color: rgba(255, 255, 255, 0.2);
-      transform: translateY(-2px);
-    }
-    
-    /* Error Message Style */
-    .error-message {
-        color: white;
-        text-align: center;
-        padding-top: 40vh;
-        font-size: 1.2rem;
-    }
-    
+    .joined-btn:hover { background-color: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+    .error-message { color: white; text-align: center; padding-top: 40vh; font-size: 1.2rem; }
   </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -127,12 +59,10 @@
       <p>Get all match updates and links directly on our Telegram channel!</p>
       <div class="modal-buttons">
         <a id="join-btn" class="modal-btn join-btn" href="https://t.me/cricketmemesverse873" target="_blank">
-          <i class="fas fa-paper-plane"></i>
-          Join Now
+          <i class="fas fa-paper-plane"></i> Join Now
         </a>
         <button id="already-joined-btn" class="modal-btn joined-btn">
-          <i class="fas fa-check"></i>
-          Already Joined
+          <i class="fas fa-check"></i> Already Joined
         </button>
       </div>
     </div>
@@ -142,7 +72,7 @@
       <video id="player" playsinline controls></video>
   </div>
   
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.min.js"></script>
 
   <script>
@@ -152,156 +82,174 @@
     const playerContainer = document.getElementById('player-container');
     const video = document.getElementById('player');
     const rawStreamUrl = new URLSearchParams(window.location.search).get("stream");
-    let player = null; // Variable to hold the Plyr instance
+    let player = null;
+    let hls = null;
 
-    // Function to set up the Plyr player
-    function setupPlayer() {
+    function showError(message) {
+      console.error("Player Error:", message);
+      if (hls) { try { hls.destroy(); hls = null; } catch(e){} }
+      if (player) { try { player.destroy(); player = null; } catch(e){} }
+      playerContainer.innerHTML = `<div class="error-message">${message}</div>`;
+    }
+
+    function setupAndLoadPlayer() {
+      console.log("Setting up player...");
       if (!rawStreamUrl) {
         showError("Error: No stream URL provided.");
         return;
       }
       
-      // Construct the proxy URL
       const proxyStreamUrl = `/proxy?url=${encodeURIComponent(rawStreamUrl)}`;
+      console.log("Using proxy URL for main manifest:", proxyStreamUrl);
       
       const plyrOptions = {
-        // Reduced controls based on the reference code, customize as needed
         controls: ['play-large', 'play', 'mute', 'volume', 'settings', 'pip', 'fullscreen'],
-        // Add quality settings placeholder - HLS.js will populate this
-        quality: { default: 576, options: [4320, 2880, 2160, 1440, 1080, 720, 576, 480, 360, 240] } 
+        quality: { default: 576, options: [240, 360, 480, 576, 720, 1080] } 
       };
 
       try {
+          // Initialize Plyr FIRST
+          if (player) { player.destroy(); } 
+          player = new Plyr(video, plyrOptions);
+          console.log("Plyr initialized.");
+
           if (Hls.isSupported()) {
-            console.log("HLS.js is supported. Initializing...");
-            const hls = new Hls({ maxMaxBufferLength: 100 });
-            hls.loadSource(proxyStreamUrl);
+            console.log("HLS.js supported. Configuring and loading source...");
+            if (hls) { hls.destroy(); } 
+            
+            // --- MODIFIED HLS.js Configuration ---
+            hls = new Hls({
+                // Help HLS resolve relative paths correctly through the proxy
+                loader: class CustomLoader extends Hls.DefaultConfig.loader {
+                    constructor(config) {
+                        super(config);
+                        this.proxyBaseUrl = '/proxy?url='; // Your proxy endpoint
+                    }
+
+                    load(context, config, callbacks) {
+                        let urlToLoad = context.url;
+                        // Check if the URL is already absolute (starts with http)
+                        if (!urlToLoad.startsWith('http')) {
+                            // If relative, construct the absolute URL based on the original raw stream URL
+                            try {
+                                const base = new URL(rawStreamUrl);
+                                // Combine base path with relative segment path
+                                const absoluteSegmentUrl = new URL(urlToLoad, base.origin + base.pathname.substring(0, base.pathname.lastIndexOf('/') + 1)).toString();
+                                console.log(`Relative URL found: ${context.url}. Resolved absolute: ${absoluteSegmentUrl}`);
+                                urlToLoad = absoluteSegmentUrl; 
+                            } catch (e) {
+                                console.error("Error resolving relative URL:", e);
+                                // Fallback or handle error - maybe try proxying the relative url directly?
+                                // urlToLoad = context.url; // Or maybe keep original relative? Test this.
+                            }
+                        }
+                        
+                        // Always proxy the final URL (whether originally absolute or resolved)
+                        context.url = this.proxyBaseUrl + encodeURIComponent(urlToLoad);
+                        console.log("Proxying final URL:", context.url); 
+                        super.load(context, config, callbacks);
+                    }
+                }
+            });
+
+
+            hls.loadSource(proxyStreamUrl); // Load the main manifest through the proxy
             hls.attachMedia(video);
 
-            hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
-              console.log("HLS Manifest Parsed:", data.levels);
-              
-              // Extract available qualities from HLS levels
-              const availableQualities = hls.levels.map(level => level.height).filter((value, index, self) => self.indexOf(value) === index); // Unique heights
-              const defaultQuality = availableQualities.includes(576) ? 576 : availableQualities[0] || 360; // Prefer 576p or first available
-
-              // Update Plyr quality options
-              plyrOptions.quality = {
-                default: defaultQuality,
-                options: availableQualities.length > 0 ? availableQualities : [defaultQuality], // Ensure options is not empty
-                forced: true,
-                onChange: (quality) => {
-                    console.log("Quality changed to:", quality);
-                    let newLevel = hls.levels.findIndex((level) => level.height === quality);
-                    if(newLevel === -1) { // If exact match not found, find closest
-                        newLevel = hls.levels.reduce((prev, curr, index) => {
-                            return (Math.abs(curr.height - quality) < Math.abs(hls.levels[prev].height - quality) ? index : prev);
-                        }, 0);
-                    }
-                    console.log("Switching HLS level to index:", newLevel);
-                    hls.currentLevel = newLevel;
-                },
-              };
-              
-              // Destroy previous instance if exists (e.g., on retry)
-              if (player) {
-                  player.destroy();
+            hls.once(Hls.Events.MANIFEST_PARSED, (event, data) => {
+              console.log("HLS Manifest Parsed (levels available):", data.levels);
+              if (player && player.elements && player.elements.container) { 
+                  const availableQualities = hls.levels.map(level => level.height).filter((v, i, a) => a.indexOf(v) === i); 
+                  const defaultQuality = availableQualities.includes(576) ? 576 : (availableQualities.length > 0 ? availableQualities[0] : 360);
+                  
+                  player.options.quality = {
+                    default: defaultQuality,
+                    options: availableQualities.length > 0 ? availableQualities : [defaultQuality],
+                    forced: true,
+                    onChange: (quality) => {
+                        console.log("Quality changing to:", quality);
+                        let newLevel = hls.levels.findIndex((level) => level.height === quality);
+                         if(newLevel === -1) { 
+                            newLevel = hls.levels.reduce((prev, curr, index) => {
+                                return (Math.abs(curr.height - quality) < Math.abs(hls.levels[prev].height - quality) ? index : prev);
+                             }, 0);
+                         }
+                        console.log("Switching HLS level index:", newLevel);
+                        hls.currentLevel = newLevel;
+                    },
+                  };
+                  // No reliable way to force Plyr menu redraw, user might need to reopen settings if it was open.
+                  console.log("Plyr quality options updated.");
+              } else {
+                 console.log("Plyr instance not found when trying to update quality.");
               }
-              // Initialize Plyr *after* HLS manifest is parsed
-              player = new Plyr(video, plyrOptions);
-              player.play(); // Start playback
-
-              // Add orientation lock
-              setupOrientationLock(player); 
+               player.play().catch(e => console.warn("Autoplay prevented:", e)); 
+               setupOrientationLock(player); 
             });
 
             hls.on(Hls.Events.ERROR, (event, data) => {
-              console.error('HLS.js Error:', data);
+              console.error('HLS.js Error:', data); // Log the full error object
               if (data.fatal) {
-                switch (data.type) {
-                  case Hls.ErrorTypes.NETWORK_ERROR:
-                    console.error('Fatal network error encountered, trying to recover...');
-                    hls.startLoad(); // Try to recover network error
-                    break;
-                  case Hls.ErrorTypes.MEDIA_ERROR:
-                    console.error('Fatal media error encountered, trying to recover...');
-                    hls.recoverMediaError(); // Try to recover media error
-                    break;
-                  default:
-                    showError("Could not load the stream (HLS Error).");
-                    hls.destroy(); // Cannot recover, destroy HLS instance
-                    break;
-                }
+                 // Try to provide more details from the error data
+                 let errorDetails = data.details || data.type || "Unknown HLS Error";
+                 if (data.response) { // If it was a network response error
+                     errorDetails += ` (Status: ${data.response.code})`;
+                 }
+                 showError(`Could not load stream: ${errorDetails}`);
+                 if(hls) { hls.destroy(); hls = null; }
               } else {
-                   // Non-fatal errors, often recoverable by HLS.js itself
-                  console.warn("Non-fatal HLS error:", data.details);
+                  console.warn("Non-fatal HLS error:", data.details || data.type);
               }
             });
 
           } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            console.log("Native HLS supported.");
-            video.src = proxyStreamUrl;
-            // Destroy previous instance if exists
-            if (player) {
-                player.destroy();
-            }
-            player = new Plyr(video, plyrOptions);
-            player.play(); // Start playback
-            setupOrientationLock(player); // Add orientation lock
+            console.log("Native HLS supported. Setting source...");
+            video.src = proxyStreamUrl; // Native should also use the proxy
+            player.play().catch(e => console.warn("Autoplay prevented:", e));
+             setupOrientationLock(player); 
 
           } else {
             showError("Your browser does not support HLS playback.");
           }
       } catch (error) {
-          console.error("Error setting up player:", error);
-          showError("An error occurred while setting up the player.");
+          console.error("Critical error setting up player:", error);
+          showError("An error occurred initializing the player.");
       }
     }
 
-    // Function to show an error message
-    function showError(message) {
-      // Destroy player if it exists to prevent conflicts
-      if (player) {
-          try { player.destroy(); } catch (e) {}
-      }
-      playerContainer.innerHTML = `<div class="error-message">${message}</div>`;
-    }
-
-    // Function to handle fullscreen orientation lock
     function setupOrientationLock(plyrInstance) {
         if (!plyrInstance) return;
         plyrInstance.on('enterfullscreen', () => {
+             console.log("Entering fullscreen");
             if (screen.orientation?.lock) {
               screen.orientation.lock('landscape').catch(err => console.warn('Orientation lock failed:', err));
             }
         });
-         plyrInstance.on('exitfullscreen', () => {
-             // Optional: Unlock orientation on exit if needed, though browser usually handles this
-             // if (screen.orientation?.unlock) {
-             // screen.orientation.unlock();
-             // }
-         });
     }
 
     // --- Modal Logic ---
-    modal.style.display = 'flex'; // Show modal initially
+    modal.style.display = 'flex';
 
     alreadyJoinedBtn.addEventListener('click', () => {
+      console.log("Already Joined clicked.");
       modal.style.display = 'none';
-      setupPlayer(); // Initialize player
+      setupAndLoadPlayer(); 
     });
 
     joinBtn.addEventListener('click', () => {
+       console.log("Join clicked.");
       setTimeout(() => {
-        modal.style.display = 'none';
-        setupPlayer(); // Initialize player
+        if (modal.style.display !== 'none') { 
+            modal.style.display = 'none';
+            setupAndLoadPlayer(); 
+        }
       }, 1000); 
     });
     
     // --- Anti-iframe ---
     if (window.top !== window.self) {
       document.addEventListener('DOMContentLoaded', function () {
-        showError('This content cannot be embedded.'); // More user-friendly message
+        showError('Content cannot be embedded.');
       });
     }
     
