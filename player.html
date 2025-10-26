@@ -2,20 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="referrer" content="no-referrer">
   <title>CMV LIVE Player</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.css">
   <style>
     html, body {
       margin: 0;
       height: 100%;
       background: black;
-      overflow: hidden;
+      overflow: hidden; /* Prevent scrollbars */
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
     
-    #player {
+    #player-container { /* Renamed container for clarity */
       width: 100%;
-      height: 100vh;
+      height: 100vh; /* Make player fill the viewport height */
       background: black;
+    }
+    
+    /* Ensure Plyr fills container */
+    .plyr {
+       height: 100%;
     }
 
     /* Telegram Modal Styles */
@@ -42,7 +50,6 @@
       text-align: center;
       width: 90%;
       max-width: 350px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -101,8 +108,15 @@
       transform: translateY(-2px);
     }
     
+    /* Error Message Style */
+    .error-message {
+        color: white;
+        text-align: center;
+        padding-top: 40vh;
+        font-size: 1.2rem;
+    }
+    
   </style>
-  <script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -124,58 +138,172 @@
     </div>
   </div>
 
-  <div id="player"></div>
+  <div id="player-container">
+      <video id="player" playsinline controls></video>
+  </div>
   
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.1.4/dist/hls.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.min.js"></script>
+
   <script>
     const modal = document.getElementById('telegram-modal');
     const joinBtn = document.getElementById('join-btn');
     const alreadyJoinedBtn = document.getElementById('already-joined-btn');
+    const playerContainer = document.getElementById('player-container');
+    const video = document.getElementById('player');
     const rawStreamUrl = new URLSearchParams(window.location.search).get("stream");
+    let player = null; // Variable to hold the Plyr instance
 
+    // Function to set up the Plyr player
     function setupPlayer() {
       if (!rawStreamUrl) {
         showError("Error: No stream URL provided.");
         return;
       }
       
+      // Construct the proxy URL
       const proxyStreamUrl = `/proxy?url=${encodeURIComponent(rawStreamUrl)}`;
       
-      jwplayer("player").setup({
-        file: proxyStreamUrl,
-        autostart: true,
-        mute: false,
-        width: "100%",
-        height: "100%",
-        stretching: "uniform",
-        controls: true,
-        primary: "html5",
-        hlshtml: true,
-      });
+      const plyrOptions = {
+        // Reduced controls based on the reference code, customize as needed
+        controls: ['play-large', 'play', 'mute', 'volume', 'settings', 'pip', 'fullscreen'],
+        // Add quality settings placeholder - HLS.js will populate this
+        quality: { default: 576, options: [4320, 2880, 2160, 1440, 1080, 720, 576, 480, 360, 240] } 
+      };
 
-      jwplayer("player").on('error', function(e) {
-        console.error("JWPlayer error:", e);
-        showError("This stream could not be loaded.");
-      });
+      try {
+          if (Hls.isSupported()) {
+            console.log("HLS.js is supported. Initializing...");
+            const hls = new Hls({ maxMaxBufferLength: 100 });
+            hls.loadSource(proxyStreamUrl);
+            hls.attachMedia(video);
+
+            hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+              console.log("HLS Manifest Parsed:", data.levels);
+              
+              // Extract available qualities from HLS levels
+              const availableQualities = hls.levels.map(level => level.height).filter((value, index, self) => self.indexOf(value) === index); // Unique heights
+              const defaultQuality = availableQualities.includes(576) ? 576 : availableQualities[0] || 360; // Prefer 576p or first available
+
+              // Update Plyr quality options
+              plyrOptions.quality = {
+                default: defaultQuality,
+                options: availableQualities.length > 0 ? availableQualities : [defaultQuality], // Ensure options is not empty
+                forced: true,
+                onChange: (quality) => {
+                    console.log("Quality changed to:", quality);
+                    let newLevel = hls.levels.findIndex((level) => level.height === quality);
+                    if(newLevel === -1) { // If exact match not found, find closest
+                        newLevel = hls.levels.reduce((prev, curr, index) => {
+                            return (Math.abs(curr.height - quality) < Math.abs(hls.levels[prev].height - quality) ? index : prev);
+                        }, 0);
+                    }
+                    console.log("Switching HLS level to index:", newLevel);
+                    hls.currentLevel = newLevel;
+                },
+              };
+              
+              // Destroy previous instance if exists (e.g., on retry)
+              if (player) {
+                  player.destroy();
+              }
+              // Initialize Plyr *after* HLS manifest is parsed
+              player = new Plyr(video, plyrOptions);
+              player.play(); // Start playback
+
+              // Add orientation lock
+              setupOrientationLock(player); 
+            });
+
+            hls.on(Hls.Events.ERROR, (event, data) => {
+              console.error('HLS.js Error:', data);
+              if (data.fatal) {
+                switch (data.type) {
+                  case Hls.ErrorTypes.NETWORK_ERROR:
+                    console.error('Fatal network error encountered, trying to recover...');
+                    hls.startLoad(); // Try to recover network error
+                    break;
+                  case Hls.ErrorTypes.MEDIA_ERROR:
+                    console.error('Fatal media error encountered, trying to recover...');
+                    hls.recoverMediaError(); // Try to recover media error
+                    break;
+                  default:
+                    showError("Could not load the stream (HLS Error).");
+                    hls.destroy(); // Cannot recover, destroy HLS instance
+                    break;
+                }
+              } else {
+                   // Non-fatal errors, often recoverable by HLS.js itself
+                  console.warn("Non-fatal HLS error:", data.details);
+              }
+            });
+
+          } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            console.log("Native HLS supported.");
+            video.src = proxyStreamUrl;
+            // Destroy previous instance if exists
+            if (player) {
+                player.destroy();
+            }
+            player = new Plyr(video, plyrOptions);
+            player.play(); // Start playback
+            setupOrientationLock(player); // Add orientation lock
+
+          } else {
+            showError("Your browser does not support HLS playback.");
+          }
+      } catch (error) {
+          console.error("Error setting up player:", error);
+          showError("An error occurred while setting up the player.");
+      }
     }
 
+    // Function to show an error message
     function showError(message) {
-      const playerElement = document.getElementById('player');
-      playerElement.innerHTML = `<div style="color:white; text-align:center; padding-top: 40vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1.2rem;">${message}</div>`;
+      // Destroy player if it exists to prevent conflicts
+      if (player) {
+          try { player.destroy(); } catch (e) {}
+      }
+      playerContainer.innerHTML = `<div class="error-message">${message}</div>`;
     }
 
-    modal.style.display = 'flex';
+    // Function to handle fullscreen orientation lock
+    function setupOrientationLock(plyrInstance) {
+        if (!plyrInstance) return;
+        plyrInstance.on('enterfullscreen', () => {
+            if (screen.orientation?.lock) {
+              screen.orientation.lock('landscape').catch(err => console.warn('Orientation lock failed:', err));
+            }
+        });
+         plyrInstance.on('exitfullscreen', () => {
+             // Optional: Unlock orientation on exit if needed, though browser usually handles this
+             // if (screen.orientation?.unlock) {
+             // screen.orientation.unlock();
+             // }
+         });
+    }
+
+    // --- Modal Logic ---
+    modal.style.display = 'flex'; // Show modal initially
 
     alreadyJoinedBtn.addEventListener('click', () => {
       modal.style.display = 'none';
-      setupPlayer();
+      setupPlayer(); // Initialize player
     });
 
     joinBtn.addEventListener('click', () => {
       setTimeout(() => {
         modal.style.display = 'none';
-        setupPlayer();
-      }, 1000);
+        setupPlayer(); // Initialize player
+      }, 1000); 
     });
+    
+    // --- Anti-iframe ---
+    if (window.top !== window.self) {
+      document.addEventListener('DOMContentLoaded', function () {
+        showError('This content cannot be embedded.'); // More user-friendly message
+      });
+    }
     
   </script>
 </body>
