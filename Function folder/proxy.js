@@ -1,8 +1,6 @@
 /*
-* This is your new proxy server.
-* It will be automatically available at /proxy on your website.
-* It takes the 'url' parameter, fetches it while pretending to be fancode.com,
-* and then sends the video stream back to your player.
+* This is your proxy server.
+* It will be available at /proxy on your website.
 */
 export async function onRequest(context) {
   // Get the stream URL from the query string (e.g., /proxy?url=...)
@@ -14,9 +12,7 @@ export async function onRequest(context) {
   }
 
   try {
-    // --- THIS IS THE CRITICAL PART ---
     // We fetch the stream, but we set a fake 'Referer' header.
-    // This makes the stream server think the request is coming from fancode.com
     const streamRequest = new Request(streamUrl, {
       headers: {
         'Referer': 'https://www.fancode.com/',
@@ -29,7 +25,6 @@ export async function onRequest(context) {
     const response = await fetch(streamRequest);
 
     // Send the video stream back to the JW Player
-    // We create a new response to handle headers correctly
     const newResponse = new Response(response.body, response);
     
     // Set CORS headers to allow your player to access the proxy
@@ -42,5 +37,4 @@ export async function onRequest(context) {
     return new Response(`Error fetching stream: ${e.message}`, { status: 500 });
   }
 }
-
 
