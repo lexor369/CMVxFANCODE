@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMV LIVE</title> <link rel="preconnect" href="https://fonts.googleapis.com">
+    <title>CMV LIVE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=Poppins:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
@@ -34,6 +35,8 @@
             --border-radius: 16px;
             --border-radius-sm: 8px;
             --border-radius-lg: 24px;
+            /* --- ADDED: For Live Title Glow --- */
+            --glow-accent: #ff6b6b; 
         }
         
         * {
@@ -82,6 +85,14 @@
             0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.3); }
             50% { box-shadow: 0 0 40px rgba(255, 107, 107, 0.6), 0 0 60px rgba(255, 107, 107, 0.4); }
         }
+        
+        /* --- ADDED: Keyframe for Title Glow --- */
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 5px var(--glow-accent), 0 0 10px var(--glow-accent), 0 0 15px var(--glow-accent); }
+            50% { text-shadow: 0 0 10px var(--glow-accent), 0 0 20px var(--glow-accent), 0 0 30px var(--glow-accent); }
+            100% { text-shadow: 0 0 5px var(--glow-accent), 0 0 10px var(--glow-accent), 0 0 15px var(--glow-accent); }
+        }
+
         @keyframes shimmer {
             0% { background-position: -200% 0; }
             100% { background-position: 200% 0; }
@@ -280,6 +291,18 @@
             background: var(--gradient-2);
             border-radius: 2px;
             animation: slideInLeft 0.8s ease-out;
+        }
+
+        /* --- ADDED: Glowing Live Title --- */
+        .section-title.live-title {
+            background: var(--gradient-2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleGlow 3s ease-in-out infinite;
+        }
+        .section-title.live-title::after {
+            background: var(--gradient-2);
         }
         
         .matches-container {
@@ -814,6 +837,21 @@
             background: rgba(255, 255, 255, 0.1);
             transform: translateY(-2px);
         }
+
+        /* --- ADDED: Telegram Button Style --- */
+        .footer-links a.telegram-btn {
+            background: var(--gradient-1);
+            color: white;
+            font-weight: 600;
+            border-radius: var(--border-radius);
+            padding: 0.75rem 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .footer-links a.telegram-btn:hover {
+            background: var(--gradient-1);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
         
         .copyright {
             color: var(--text-light);
@@ -882,7 +920,8 @@
         <div class="header-content">
             <div class="logo">
                 <i class="fas fa-tv"></i>
-                <span>CMV LIVE</span> </div>
+                <span>CMV LIVE</span>
+            </div>
             <button class="refresh-btn" id="refresh-btn">
                 <i class="fas fa-sync-alt"></i>
                 Refresh
@@ -891,7 +930,7 @@
     </header>
     
     <div class="container">
-        <h2 class="section-title animate__animated animate__fadeInLeft">Live Matches</h2>
+        <h2 class="section-title live-title animate__animated animate__fadeInLeft">Live Matches</h2>
         <div id="live-matches" class="matches-container"></div>
         
         <h2 class="section-title animate__animated animate__fadeInLeft">Upcoming Matches</h2>
@@ -923,12 +962,16 @@
         <div class="footer-content">
             <div class="logo">
                 <i class="fas fa-tv"></i>
-                <span>CMV LIVE</span> </div>
+                <span>CMV LIVE</span>
+            </div>
             <div class="footer-links">
-                <a href="https://t.me/cricketmemesverse873" target="_blank">Join Telegram</a>
+                <a href="https://t.me/cricketmemesverse873" target="_blank" class="telegram-btn">
+                    <i class="fab fa-telegram-plane"></i> Join Telegram
+                </a>
             </div>
             <div class="copyright">
-                © 2025 CMV LIVE. All rights reserved. </div>
+                © 2025 CMV LIVE. All rights reserved.
+            </div>
         </div>
     </footer>
     
@@ -936,7 +979,7 @@
         // Fetch data from JSON URL
         const jsonUrl = 'https://raw.githubusercontent.com/Jitendra-unatti/fancode/refs/heads/main/data/fancode.json';
         
-        // --- CHANGED: Pointing both player URLs to your local player.html ---
+        // Pointing both player URLs to your local player.html
         const worldwidePlayerUrl = 'player.html';
         const indiaPlayerUrl = 'player.html';
         
@@ -951,13 +994,10 @@
         const indiaBtn = document.getElementById('india-btn');
         const refreshBtn = document.getElementById('refresh-btn');
         
-        // Current selected match for modal
         let currentMatch = null;
         
-        // Fetch data and render matches
         async function fetchAndRenderMatches() {
             try {
-                // Show loading states
                 liveMatchesContainer.innerHTML = `
                     <div class="loading">
                         <div class="loading-spinner"></div>
@@ -974,15 +1014,12 @@
                 const response = await fetch(jsonUrl);
                 const data = await response.json();
                 
-                // Clear loading messages
                 liveMatchesContainer.innerHTML = '';
                 upcomingMatchesContainer.innerHTML = '';
                 
-                // Separate live and upcoming matches
                 const liveMatches = data.matches.filter(match => match.status === 'LIVE');
                 const upcomingMatches = data.matches.filter(match => match.status !== 'LIVE');
                 
-                // Render live matches
                 if (liveMatches.length > 0) {
                     liveMatches.forEach((match, index) => {
                         const card = createMatchCard(match, index);
@@ -992,7 +1029,6 @@
                     liveMatchesContainer.innerHTML = '<div class="no-matches">No live matches currently</div>';
                 }
                 
-                // Render upcoming matches
                 if (upcomingMatches.length > 0) {
                     upcomingMatches.forEach((match, index) => {
                         const card = createMatchCard(match, index);
@@ -1009,21 +1045,17 @@
             }
         }
         
-        // Create a match card element
         function createMatchCard(match, index) {
             const card = document.createElement('div');
             card.className = 'match-card';
             card.style.setProperty('--delay', index);
             
-            // Use the first available image
             const imageUrl = match.image ||
                             (match.image_cdn && match.image_cdn.APP) || 
                             'https://via.placeholder.com/300x180?text=No+Image';
             
-            // Determine if match is live
             const isLive = match.status === 'LIVE';
             
-            // Get team scores if available
             const team1Score = match.teams[0].cricketScore ?
                                 match.teams[0].cricketScore[0] : null;
             const team2Score = match.teams[1].cricketScore ? match.teams[1].cricketScore[0] : null;
@@ -1060,7 +1092,6 @@
                 </div>
             `;
             
-            // Add click event to show streaming options for live matches
             if (isLive) {
                 card.addEventListener('click', () => {
                     currentMatch = match;
@@ -1071,25 +1102,20 @@
             return card;
         }
         
-        // Show streaming options modal
         function showStreamModal(match) {
             modalTitle.textContent = match.title;
             modalTournament.textContent = match.tournament;
             
-            // Get the stream URL (prioritize adfree_stream, then dai_stream, then Primary_Playback_URL)
             const streamUrl = match.adfree_stream ||
                             match.dai_stream || 
                             (match.STREAMING_CDN && match.STREAMING_CDN.Primary_Playback_URL);
             
             if (streamUrl) {
-                // Encode the stream URL for URL parameter
                 const encodedStreamUrl = encodeURIComponent(streamUrl);
                 
-                // Set player URLs with stream URL as parameter
                 worldwideBtn.href = `${worldwidePlayerUrl}?stream=${encodedStreamUrl}`;
                 indiaBtn.href = `${indiaPlayerUrl}?stream=${encodedStreamUrl}`;
                 
-                // Show modal with animation
                 modal.classList.add('show');
                 document.body.style.overflow = 'hidden';
             } else {
@@ -1097,7 +1123,6 @@
             }
         }
         
-        // Close modal
         function closeModalFunc() {
             modal.classList.remove('show');
             document.body.style.overflow = 'auto';
@@ -1105,20 +1130,16 @@
         
         closeModal.addEventListener('click', closeModalFunc);
         
-        // Close modal when clicking outside
         modal.addEventListener('click', (event) => {
             if (event.target === modal) {
                 closeModalFunc();
             }
         });
         
-        // Refresh button
         refreshBtn.addEventListener('click', fetchAndRenderMatches);
         
-        // Initialize
         fetchAndRenderMatches();
         
-        // Add animation to section titles on scroll
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
