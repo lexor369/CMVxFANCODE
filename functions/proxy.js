@@ -1,9 +1,8 @@
 /*
 * This is your proxy server.
-* It will be available at /proxy on your website.
+* Tries to fetch streams with specific headers to bypass restrictions.
 */
 export async function onRequest(context) {
-  // Get the stream URL from the query string (e.g., /proxy?url=...)
   const url = new URL(context.request.url);
   const streamUrl = url.searchParams.get('url');
 
@@ -12,30 +11,53 @@ export async function onRequest(context) {
   }
 
   try {
-    // We fetch the stream, but we set a fake 'Referer' header.
+    // --- Using a standard Chrome User-Agent ---
+    const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36';
+
     const streamRequest = new Request(streamUrl, {
       headers: {
         'Referer': 'https://www.fancode.com/',
         'Origin': 'https://www.fancode.com',
-        'User-Agent': context.request.headers.get('User-Agent') || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
-      }
+        'User-Agent': userAgent // Use the updated User-Agent
+      },
+       // Add redirect handling - sometimes needed
+      redirect: 'follow' 
     });
+
+    console.log(`Proxy attempting to fetch: ${streamUrl} with User-Agent: ${userAgent}`);
 
     // Fetch the actual video stream
     const response = await fetch(streamRequest);
 
-    // Send the video stream back to the JW Player
+    console.log(`Proxy received response status: ${response.status} for ${streamUrl}`);
+
+    // If FanCode still blocks us (403), return that error clearly
+    if (response.status === 403) {
+        console.error(`Proxy fetch failed with 403 Forbidden for ${streamUrl}`);
+        return new Response('Error: Upstream server denied access (403 Forbidden)', { status: 403 });
+    }
+     // Handle other potential errors from FanCode server
+    if (!response.ok) {
+        console.error(`Proxy fetch failed with status ${response.status} for ${streamUrl}`);
+        return new Response(`Error: Upstream server responded with status ${response.status}`, { status: response.status });
+    }
+
+    // Send the video stream back to the Player
     const newResponse = new Response(response.body, response);
     
-    // Set CORS headers to allow your player to access the proxy
+    // Set CORS headers
     newResponse.headers.set('Access-Control-Allow-Origin', '*');
     newResponse.headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    // Copy content-type header from original response
+    if (response.headers.has('content-type')) {
+        newResponse.headers.set('content-type', response.headers.get('content-type'));
+    }
     
     return newResponse;
 
   } catch (e) {
-    return new Response(`Error fetching stream: ${e.message}`, { status: 500 });
+    console.error(`Proxy fetch encountered an exception: ${e.message}`);
+    return new Response(`Error fetching stream via proxy: ${e.message}`, { status: 500 });
   }
 }
-
 
