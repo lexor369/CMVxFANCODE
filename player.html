@@ -108,7 +108,6 @@
       };
 
       try {
-          // Initialize Plyr FIRST
           if (player) { player.destroy(); } 
           player = new Plyr(video, plyrOptions);
           console.log("Plyr initialized.");
@@ -117,48 +116,68 @@
             console.log("HLS.js supported. Configuring and loading source...");
             if (hls) { hls.destroy(); } 
             
-            // --- MODIFIED HLS.js Configuration ---
+            // --- CORRECTED HLS.js Loader Configuration ---
             hls = new Hls({
-                // Help HLS resolve relative paths correctly through the proxy
                 loader: class CustomLoader extends Hls.DefaultConfig.loader {
                     constructor(config) {
                         super(config);
-                        this.proxyBaseUrl = '/proxy?url='; // Your proxy endpoint
+                        this.proxyBaseUrl = '/proxy?url='; 
                     }
 
                     load(context, config, callbacks) {
-                        let urlToLoad = context.url;
-                        // Check if the URL is already absolute (starts with http)
-                        if (!urlToLoad.startsWith('http')) {
-                            // If relative, construct the absolute URL based on the original raw stream URL
-                            try {
-                                const base = new URL(rawStreamUrl);
-                                // Combine base path with relative segment path
-                                const absoluteSegmentUrl = new URL(urlToLoad, base.origin + base.pathname.substring(0, base.pathname.lastIndexOf('/') + 1)).toString();
-                                console.log(`Relative URL found: ${context.url}. Resolved absolute: ${absoluteSegmentUrl}`);
-                                urlToLoad = absoluteSegmentUrl; 
-                            } catch (e) {
-                                console.error("Error resolving relative URL:", e);
-                                // Fallback or handle error - maybe try proxying the relative url directly?
-                                // urlToLoad = context.url; // Or maybe keep original relative? Test this.
-                            }
+                        let originalUrl = context.url; // URL requested by HLS
+                        let urlToProxy = originalUrl;
+
+                        // --- FIX: Check if originalUrl ALREADY starts with our proxy ---
+                        if (originalUrl.startsWith(this.proxyBaseUrl) || originalUrl.startsWith('/proxy?')) {
+                            console.log("URL already proxied, using as is:", originalUrl);
+                            // It's already proxied (likely the main manifest), load it directly
+                             super.load(context, config, callbacks);
+                             return; 
                         }
-                        
-                        // Always proxy the final URL (whether originally absolute or resolved)
-                        context.url = this.proxyBaseUrl + encodeURIComponent(urlToLoad);
+
+                        // --- FIX: Check if it's an ABSOLUTE URL (starts with http) but NOT proxied yet ---
+                        if (originalUrl.startsWith('http')) {
+                            console.log("Absolute URL found, needs proxying:", originalUrl);
+                            urlToProxy = originalUrl; // This is the URL we need to proxy
+                        }
+                        // --- FIX: Check if it's a RELATIVE URL ---
+                        else if (!originalUrl.startsWith('/')) { // Simple check for relative path
+                           console.log(`Relative URL found: ${originalUrl}. Resolving...`);
+                           try {
+                                const base = new URL(rawStreamUrl); // Base is the ORIGINAL stream URL
+                                const absoluteSegmentUrl = new URL(originalUrl, base.origin + base.pathname.substring(0, base.pathname.lastIndexOf('/') + 1)).toString();
+                                console.log(`Resolved absolute: ${absoluteSegmentUrl}`);
+                                urlToProxy = absoluteSegmentUrl; // This is the URL we need to proxy
+                            } catch (e) {
+                                console.error("Error resolving relative URL:", e, "Original:", originalUrl);
+                                // If resolving fails, try proxying the original relative path directly (might work sometimes)
+                                // urlToProxy = originalUrl; 
+                                // OR: Fail gracefully
+                                callbacks.onError({ response: { code: 404, text: 'Failed to resolve relative URL' } }, context, null);
+                                return;
+                            }
+                        } else {
+                            // It's some other kind of URL (e.g., starts with '/', data:), don't proxy
+                            console.log("Unhandled URL type, loading directly:", originalUrl);
+                            super.load(context, config, callbacks);
+                            return;
+                        }
+
+                        // --- Apply proxy ONLY if needed ---
+                        context.url = this.proxyBaseUrl + encodeURIComponent(urlToProxy);
                         console.log("Proxying final URL:", context.url); 
                         super.load(context, config, callbacks);
                     }
                 }
             });
 
-
-            hls.loadSource(proxyStreamUrl); // Load the main manifest through the proxy
+            hls.loadSource(proxyStreamUrl); // Load the main manifest (first request goes through proxy)
             hls.attachMedia(video);
 
             hls.once(Hls.Events.MANIFEST_PARSED, (event, data) => {
               console.log("HLS Manifest Parsed (levels available):", data.levels);
-              if (player && player.elements && player.elements.container) { 
+               if (player && player.elements && player.elements.container) { 
                   const availableQualities = hls.levels.map(level => level.height).filter((v, i, a) => a.indexOf(v) === i); 
                   const defaultQuality = availableQualities.includes(576) ? 576 : (availableQualities.length > 0 ? availableQualities[0] : 360);
                   
@@ -178,7 +197,6 @@
                         hls.currentLevel = newLevel;
                     },
                   };
-                  // No reliable way to force Plyr menu redraw, user might need to reopen settings if it was open.
                   console.log("Plyr quality options updated.");
               } else {
                  console.log("Plyr instance not found when trying to update quality.");
@@ -188,11 +206,10 @@
             });
 
             hls.on(Hls.Events.ERROR, (event, data) => {
-              console.error('HLS.js Error:', data); // Log the full error object
+              console.error('HLS.js Error:', data); 
               if (data.fatal) {
-                 // Try to provide more details from the error data
                  let errorDetails = data.details || data.type || "Unknown HLS Error";
-                 if (data.response) { // If it was a network response error
+                 if (data.response) { 
                      errorDetails += ` (Status: ${data.response.code})`;
                  }
                  showError(`Could not load stream: ${errorDetails}`);
@@ -204,7 +221,7 @@
 
           } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             console.log("Native HLS supported. Setting source...");
-            video.src = proxyStreamUrl; // Native should also use the proxy
+            video.src = proxyStreamUrl; 
             player.play().catch(e => console.warn("Autoplay prevented:", e));
              setupOrientationLock(player); 
 
