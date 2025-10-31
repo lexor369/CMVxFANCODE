@@ -263,6 +263,139 @@
         .refresh-btn i {
             transition: transform 0.3s ease;
         }
+
+        /* --- NEW: Spotlight --- */
+        #spotlight-container {
+            max-width: 1400px;
+            margin: 2rem auto 0 auto;
+            padding: 0 2rem;
+        }
+
+        .spotlight-card {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            animation: fadeIn 1s ease-out;
+            border-left: 4px solid var(--accent);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 107, 107, 0.2);
+        }
+
+        .spotlight-image-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+        }
+
+        .spotlight-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top; /* Match new code */
+            border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+        }
+        
+        .spotlight-live-badge {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: var(--gradient-2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: glow 2s ease-in-out infinite;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        .spotlight-live-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: livePulse 1.5s infinite;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .spotlight-details {
+            padding: 0 2rem 2rem 2rem;
+        }
+
+        .spotlight-tournament {
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .spotlight-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--light);
+            line-height: 1.3;
+            margin-bottom: 1.5rem;
+        }
+        
+        .spotlight-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .spotlight-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: var(--shadow-sm);
+            background: var(--gradient-1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .spotlight-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: var(--shadow-md);
+        }
+        .spotlight-btn.adfree-btn {
+            background: var(--gradient-2);
+        }
+        
+        @media (min-width: 768px) {
+            .spotlight-card {
+                grid-template-columns: 1fr 1.2fr;
+                align-items: center;
+            }
+            .spotlight-image-container {
+                height: 100%;
+            }
+            .spotlight-image {
+                border-radius: var(--border-radius-lg) 0 0 var(--border-radius-lg);
+            }
+            .spotlight-details {
+                padding: 2rem;
+            }
+            .spotlight-title {
+                font-size: 2.5rem;
+            }
+        }
         
         /* Main Content */
         .container {
@@ -380,6 +513,7 @@
             width: 100%;
             height: 200px;
             object-fit: cover;
+            object-position: top; /* Match new code */
             transition: transform 0.3s ease, filter 0.3s ease;
             filter: brightness(0.9);
         }
@@ -835,6 +969,9 @@
                 flex-direction: column;
                 gap: 1rem;
             }
+             #spotlight-container {
+                padding: 0 1rem;
+            }
             .container {
                 padding: 2rem 1rem;
             }
@@ -887,6 +1024,16 @@
                 flex-direction: column;
                 align-items: flex-start;
             }
+            .spotlight-title {
+                font-size: 1.5rem;
+            }
+            .spotlight-details {
+                padding: 0 1.5rem 1.5rem 1.5rem;
+            }
+            .spotlight-live-badge {
+                top: 1rem;
+                left: 1rem;
+            }
         }
     </style>
 </head>
@@ -903,6 +1050,11 @@
             </button>
         </div>
     </header>
+
+    <!-- NEW: Spotlight Container -->
+    <div id="spotlight-container">
+        <!-- Spotlight match will be injected here -->
+    </div>
     
     <div class="container">
         <h2 class="section-title live-title animate__animated animate__fadeInLeft">Live Matches</h2>
@@ -916,6 +1068,7 @@
         </div>
     </div>
     
+    <!-- This modal is for the normal match cards -->
     <div id="stream-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -924,15 +1077,15 @@
                 <i class="fas fa-trophy"></i>
                 <span id="modal-match-tournament"></span>
             </p>
+            <!-- UPDATED: Button names changed for clarity -->
             <div class="stream-options">
-                <!-- UPDATED: Added spans so I can change the text -->
                 <a id="worldwide-btn" class="stream-btn worldwide-btn" href="#" target="_blank">
                     <i class="fas fa-globe"></i>
-                    <span>Normal Stream</span>
+                    <span>Normal (DAI)</span>
                 </a>
                 <a id="india-btn" class="stream-btn india-btn" href="#" target="_blank">
                     <i class="fas fa-flag"></i>
-                    <span>Ad-Free Stream</span>
+                    <span>Ad-Free</span>
                 </a>
             </div>
         </div>
@@ -945,27 +1098,23 @@
                 <span>CMV LIVE</span>
             </div>
             <div class="footer-links">
-                <!-- REPLACED: Telegram link updated -->
+                <!-- UPDATED: Telegram link -->
                 <a href="https://t.me/cricketmemesverse873" target="_blank" class="telegram-btn">
                     <i class="fab fa-telegram-plane"></i> Join Telegram
                 </a>
             </div>
             <div class="copyright">
-                <!-- REPLACED: Copyright updated -->
                 © 2025 CMV LIVE. All rights reserved.
             </div>
         </div>
     </footer>
     
     <script>
-        // The JSON data source from the original code
-        const jsonUrl = 'https://raw.githubusercontent.com/drmlive/fancode-live-events/main/fancode.json';
-        
-        // Pointing both player URLs to your local player.html
-        const worldwidePlayerUrl = 'player.html';
-        const indiaPlayerUrl = 'player.html';
+        const playerPageUrl = 'player.html';
+        const jsonUrl = 'https://raw.githubusercontent.com/Jitendra-unatti/fancode/refs/heads/main/data/fancode.json';
         
         // DOM elements
+        const spotlightContainer = document.getElementById('spotlight-container');
         const liveMatchesContainer = document.getElementById('live-matches');
         const upcomingMatchesContainer = document.getElementById('upcoming-matches');
         const modal = document.getElementById('stream-modal');
@@ -993,10 +1142,10 @@
                         Loading upcoming matches...
                     </div>
                 `;
+                spotlightContainer.innerHTML = ''; // Clear spotlight
                 
                 // Fetch data from the JSON URL
-                // Added cache-busting parameter to ensure fresh data
-                const response = await fetch(jsonUrl + '?t=' + new Date().getTime()); 
+                const response = await fetch(jsonUrl + '?t=' + new Date().getTime()); // Cache buster
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -1006,27 +1155,58 @@
                 liveMatchesContainer.innerHTML = '';
                 upcomingMatchesContainer.innerHTML = '';
                 
-                // **** CORRECTED: Use 'data.matches' which is the correct key in the JSON
-                const allMatches = data.matches || [];
+                const allMatches = data.matches || data || []; // Handle both structures
                 
-                // Filter matches based on status
-                const liveMatches = allMatches.filter(match => (match.status === 'LIVE' || match.status === 'Live') && match.dai_url);
-                const upcomingMatches = allMatches.filter(match => (match.status !== 'LIVE' && match.status !== 'Live'));
+                // Sort to find the first live match
+                allMatches.sort((a, b) => {
+                    const aIsLive = a.status?.toUpperCase() === 'LIVE' && a.dai_stream;
+                    const bIsLive = b.status?.toUpperCase() === 'LIVE' && b.dai_stream;
+                    return bIsLive - aIsLive;
+                });
+
+                // Find the first live match for the spotlight
+                const firstLiveMatch = allMatches.find(m => m.status?.toUpperCase() === 'LIVE' && m.dai_stream);
+                
+                let normalLiveMatches = [];
+                let upcomingMatches = [];
+                
+                if(firstLiveMatch) {
+                    renderSpotlight(firstLiveMatch);
+                    // Filter other matches, excluding the spotlight one
+                    allMatches.forEach(match => {
+                        if (match.match_id === firstLiveMatch.match_id) return; // Skip spotlight match
+                        
+                        if (match.status?.toUpperCase() === 'LIVE' && match.dai_stream) {
+                            normalLiveMatches.push(match);
+                        } else {
+                            upcomingMatches.push(match);
+                        }
+                    });
+                } else {
+                    // If no spotlight match, filter all
+                    allMatches.forEach(match => {
+                        if (match.status?.toUpperCase() === 'LIVE' && match.dai_stream) {
+                            normalLiveMatches.push(match);
+                        } else {
+                            upcomingMatches.push(match);
+                        }
+                    });
+                }
                 
                 // Render Live Matches
-                if (liveMatches.length > 0) {
-                    liveMatches.forEach((match, index) => {
-                        const card = createMatchCard(match, index);
+                if (normalLiveMatches.length > 0) {
+                    normalLiveMatches.forEach((match, index) => {
+                        const card = createMatchCard(match, index, true);
                         liveMatchesContainer.appendChild(card);
                     });
                 } else {
-                    liveMatchesContainer.innerHTML = '<div class="no-matches">No live matches currently. Check back soon!</div>';
+                    liveMatchesContainer.innerHTML = '<div class="no-matches">No other live matches currently.</div>';
                 }
                 
                 // Render Upcoming Matches
                 if (upcomingMatches.length > 0) {
                     upcomingMatches.forEach((match, index) => {
-                        const card = createMatchCard(match, index);
+                        const card = createMatchCard(match, index, false);
                         upcomingMatchesContainer.appendChild(card);
                     });
                 } else {
@@ -1035,41 +1215,71 @@
                 
             } catch (error) {
                 console.error('Error fetching matches:', error);
-                liveMatchesContainer.innerHTML = '<div class="error"><i class="fas fa-exclamation-triangle"></i> Failed to load live matches. Please try refreshing.</div>';
-                upcomingMatchesContainer.innerHTML = '<div class="error"><i class="fas fa-exclamation-triangle"></i> Failed to load upcoming matches. Please try refreshing.</div>';
+                liveMatchesContainer.innerHTML = '<div class="error"><i class="fas fa-exclamation-triangle"></i> Failed to load matches. Please try refreshing.</div>';
+                upcomingMatchesContainer.innerHTML = ''; // Hide second error
             }
         }
+
+        // NEW: Function to render the spotlight card
+        function renderSpotlight(match) {
+            const imgSrc = match.image || 'https://placehold.co/600x400/1a1a2e/f8fafc?text=No+Image';
+            
+            // Generate buttons based on new logic
+            const matchId = encodeURIComponent(String(match.match_id ?? ''));
+            const streams = {
+                ...match.STREAMING_CDN,
+                adfree_stream: match.adfree_stream,
+                dai_stream: match.dai_stream
+            };
+            
+            let buttonsHTML = '';
+            for (const [key, value] of Object.entries(streams)) {
+                if (value && value !== "Unavailable" && key.toLowerCase() !== 'language' && key !== 'Primary_Playback_URL') {
+                    const label = key.replace(/_/g, ' ').replace(/(cdn|stream)/i, '').trim().toUpperCase() || 'STREAM';
+                    const href = `${playerPageUrl}?id=${matchId}&cdn=${encodeURIComponent(key)}`;
+                    const btnClass = (key === 'adfree_stream') ? 'adfree-btn' : '';
+                    buttonsHTML += `<a href="${href}" target="_blank" class="spotlight-btn ${btnClass}">${label}</a>`;
+                }
+            }
+
+            spotlightContainer.innerHTML = `
+                <div class="spotlight-card">
+                    <div class="spotlight-image-container">
+                        <img src="${imgSrc}" alt="${match.title}" class="spotlight-image" onerror="this.src='https://placehold.co/600x400/1a1a2e/f8fafc?text=Image+Error';">
+                        <div class="spotlight-live-badge">LIVE NOW</div>
+                    </div>
+                    <div class="spotlight-details">
+                        <p class="spotlight-tournament">${match.tournament || 'Live Event'}</p>
+                        <h2 class="spotlight-title">${match.title || 'Live Match'}</h2>
+                        <div class="spotlight-buttons">
+                            ${buttonsHTML || '<p class="text-slate-400">Stream links available...</p>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
         
-        // Function to create a match card from the JSON data
-        function createMatchCard(match, index) {
+        // Function to create a normal match card
+        function createMatchCard(match, index, isLive) {
             const card = document.createElement('div');
             card.className = 'match-card';
             card.style.setProperty('--delay', index % 10); 
             
-            // **** CORRECTED: Extracting data from the 'data.matches' structure
-            const imageUrl = match.src || 'https://placehold.co/400x200/1a1a2e/f8fafc?text=No+Image';
-            const isLive = match.status === 'LIVE' || match.status === 'Live';
-            const title = match.title || 'Live Match';
-            const tournament = match.event_name || 'Live Event';
-            const category = "Sports"; // Default category as it's not in the JSON
+            const imageUrl = match.image || 'https://placehold.co/400x200/1a1a2e/f8fafc?text=No+Image';
+            const title = match.title || 'Match Title';
+            const tournament = match.tournament || 'Event';
+            const category = "Sports";
             
-            let timeString;
-            if (!isLive && match.startTime) {
-                // Format the upcoming time string "05:00:00 PM, 31-10-2025"
-                const parts = match.startTime.split(' '); 
-                if (parts.length === 3) {
-                    timeString = `${parts[0]} ${parts[1]} ${parts[2]}`;
-                } else {
-                    timeString = match.startTime; // Fallback
-                }
-            } else if (isLive) {
+            let timeString = 'TBA';
+            if (isLive) {
                 timeString = 'LIVE NOW';
-            } else {
-                timeString = 'TBA';
+            } else if (match.startTime) { // Note: new JSON doesn't seem to have startTime, but keeping for robustness
+                timeString = match.startTime;
             }
 
-            const team1Name = match.team_1 || 'TBC';
-            const team2Name = match.team_2 || 'TBC';
+            // Using team names from new JSON structure
+            const team1Name = match.title?.split('Vs')[0]?.trim() || 'TBC';
+            const team2Name = match.title?.split('Vs')[1]?.trim() || 'TBC';
             
             card.innerHTML = `
                 <img src="${imageUrl}" alt="${title}" class="match-image" onerror="this.src='https://placehold.co/400x200/1a1a2e/f8fafc?text=Image+Error';">
@@ -1097,53 +1307,38 @@
                 </div>
             `;
             
-            // Add click event, only if the match is live and has stream URLs
-            if (isLive && match.dai_url && match.adfree_url) {
+            // Only add the click event if it's a "live" match (with URLs)
+            if (isLive) {
                 card.addEventListener('click', () => {
                     currentMatch = match;
                     showStreamModal(match);
                 });
-            } else if (!isLive) {
-                card.style.cursor = 'default'; // Not clickable if upcoming
-                card.addEventListener('click', () => {
-                    // Maybe show a "coming soon" message
-                    console.log("This match is not live yet.");
-                });
+            } else {
+                card.style.cursor = 'default';
+                card.style.filter = 'grayscale(50%)';
+                card.style.opacity = '0.7';
             }
             
             return card;
         }
         
-        // Function to populate and show the stream modal
+        // Function to populate and show the stream modal (for normal cards)
         function showStreamModal(match) {
-            // **** CORRECTED: Using correct data fields
             const title = match.title || 'Live Stream';
-            const tournament = match.event_name || 'Live Event';
+            const tournament = match.tournament || 'Live Event';
             
             modalTitle.textContent = title;
             modalTournament.textContent = tournament;
             
-            const normalStream = match.dai_url;
-            const adFreeStream = match.adfree_url;
+            const matchId = encodeURIComponent(String(match.match_id ?? ''));
+            const normalStreamUrl = `${playerPageUrl}?id=${matchId}&cdn=dai_stream`;
+            const adFreeStreamUrl = `${playerPageUrl}?id=${matchId}&cdn=adfree_stream`;
             
-            if (normalStream && adFreeStream) {
-                // Encode the URLs to be passed as a parameter
-                const encodedNormalStream = encodeURIComponent(normalStream);
-                const encodedAdFreeStream = encodeURIComponent(adFreeStream);
+            worldwideBtn.href = normalStreamUrl;
+            indiaBtn.href = adFreeStreamUrl;
                 
-                // Set the href for both buttons
-                worldwideBtn.href = `${worldwidePlayerUrl}?stream=${encodedNormalStream}`;
-                indiaBtn.href = `${indiaPlayerUrl}?stream=${encodedAdFreeStream}`;
-                
-                // Make sure buttons are visible
-                worldwideBtn.style.display = 'flex';
-                indiaBtn.style.display = 'flex';
-                
-                modal.classList.add('show');
-                document.body.style.overflow = 'hidden';
-            } else {
-                console.warn('Stream URLs not available for this match:', title);
-            }
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
         }
         
         // Function to close the modal
@@ -1153,8 +1348,9 @@
         }
         
         // Event Listeners
+        document.addEventListener('DOMContentLoaded', fetchAndRenderMatches);
+
         closeModal.addEventListener('click', closeModalFunc);
-        
         modal.addEventListener('click', (event) => {
             if (event.target === modal) {
                 closeModalFunc();
@@ -1172,9 +1368,6 @@
                 icon.style.transform = 'rotate(0deg)';
             }, 500);
         });
-        
-        // Initial fetch of matches when the page loads
-        fetchAndRenderMatches();
 
     </script>
 </body>
