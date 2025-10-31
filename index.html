@@ -498,43 +498,6 @@
         .team:last-child {
             margin-bottom: 0;
         }
-        .team::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            border-radius: var(--border-radius-sm);
-        }
-        .team:hover {
-            transform: translateX(5px);
-            background: rgba(255, 255, 255, 0.05);
-        }
-        .team:hover::before {
-            opacity: 1;
-        }
-        .team:hover .team-flag {
-            transform: scale(1.05);
-            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
-        }
-        .team:hover .team-name {
-            color: var(--light);
-        }
-        
-        .team-flag {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            margin-right: 1rem;
-            object-fit: cover;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            box-shadow: var(--shadow-sm);
-            background-color: var(--glass-bg); /* Fallback for broken images */
-        }
         
         .team-name {
             font-size: 1rem;
@@ -936,7 +899,7 @@
             </div>
             <button class="refresh-btn" id="refresh-btn">
                 <i class="fas fa-sync-alt"></i>
-                Refresh
+                <span>Refresh</span>
             </button>
         </div>
     </header>
@@ -962,13 +925,14 @@
                 <span id="modal-match-tournament"></span>
             </p>
             <div class="stream-options">
+                <!-- UPDATED: Added spans so I can change the text -->
                 <a id="worldwide-btn" class="stream-btn worldwide-btn" href="#" target="_blank">
                     <i class="fas fa-globe"></i>
-                    Worldwide Stream
+                    <span>Normal Stream</span>
                 </a>
                 <a id="india-btn" class="stream-btn india-btn" href="#" target="_blank">
                     <i class="fas fa-flag"></i>
-                    India Stream
+                    <span>Ad-Free Stream</span>
                 </a>
             </div>
         </div>
@@ -1031,7 +995,8 @@
                 `;
                 
                 // Fetch data from the JSON URL
-                const response = await fetch(jsonUrl + '?t=' + new Date().getTime()); // Add cache buster
+                // Added cache-busting parameter to ensure fresh data
+                const response = await fetch(jsonUrl + '?t=' + new Date().getTime()); 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -1041,12 +1006,12 @@
                 liveMatchesContainer.innerHTML = '';
                 upcomingMatchesContainer.innerHTML = '';
                 
-                // Use 'events' key from the JSON structure
-                const allMatches = data.events || [];
+                // **** CORRECTED: Use 'data.matches' which is the correct key in the JSON
+                const allMatches = data.matches || [];
                 
                 // Filter matches based on status
-                const liveMatches = allMatches.filter(match => (match.status === 'LIVE' || match.status === 'Live') && match.streaming_urls);
-                const upcomingMatches = allMatches.filter(match => (match.status !== 'LIVE' && match.status !== 'Live') && match.streaming_urls);
+                const liveMatches = allMatches.filter(match => (match.status === 'LIVE' || match.status === 'Live') && match.dai_url);
+                const upcomingMatches = allMatches.filter(match => (match.status !== 'LIVE' && match.status !== 'Live'));
                 
                 // Render Live Matches
                 if (liveMatches.length > 0) {
@@ -1079,34 +1044,35 @@
         function createMatchCard(match, index) {
             const card = document.createElement('div');
             card.className = 'match-card';
-            // Stagger animation delay
-            card.style.setProperty('--delay', index % 10); // Reset delay every 10 items
+            card.style.setProperty('--delay', index % 10); 
             
-            // Extract data from the JSON object
-            const imageUrl = match.poster || 'https://placehold.co/400x200/1a1a2e/f8fafc?text=No+Image';
+            // **** CORRECTED: Extracting data from the 'data.matches' structure
+            const imageUrl = match.src || 'https://placehold.co/400x200/1a1a2e/f8fafc?text=No+Image';
             const isLive = match.status === 'LIVE' || match.status === 'Live';
-            const title = match.title || `${match.team1.name} vs ${match.team2.name}`;
-            const tournament = match.tour_name || 'Live Match';
-            const category = match.sport || 'Sport';
+            const title = match.title || 'Live Match';
+            const tournament = match.event_name || 'Live Event';
+            const category = "Sports"; // Default category as it's not in the JSON
             
-            let timeString = 'TBA';
-            try {
-                 timeString = new Date(match.start_time).toLocaleString('en-US', {
-                    month: 'short', day: 'numeric',
-                    hour: '2-digit', minute: '2-digit',
-                    hour12: true
-                 });
-            } catch(e) {
-                timeString = match.start_time; // Fallback to raw string if date is invalid
+            let timeString;
+            if (!isLive && match.startTime) {
+                // Format the upcoming time string "05:00:00 PM, 31-10-2025"
+                const parts = match.startTime.split(' '); 
+                if (parts.length === 3) {
+                    timeString = `${parts[0]} ${parts[1]} ${parts[2]}`;
+                } else {
+                    timeString = match.startTime; // Fallback
+                }
+            } else if (isLive) {
+                timeString = 'LIVE NOW';
+            } else {
+                timeString = 'TBA';
             }
 
-            const team1Flag = (match.team1 && match.team1.flag) ? match.team1.flag : 'https://placehold.co/32/6b7280/f8fafc?text=?';
-            const team1Name = (match.team1 && (match.team1.short_name || match.team1.name)) ? (match.team1.short_name || match.team1.name) : 'TBC';
-            const team2Flag = (match.team2 && match.team2.flag) ? match.team2.flag : 'https://placehold.co/32/6b7280/f8fafc?text=?';
-            const team2Name = (match.team2 && (match.team2.short_name || match.team2.name)) ? (match.team2.short_name || match.team2.name) : 'TBC';
+            const team1Name = match.team_1 || 'TBC';
+            const team2Name = match.team_2 || 'TBC';
             
             card.innerHTML = `
-                <img src="${imageUrl}" alt="${title}" class="match-image" onerror="this.src='https::/placehold.co/400x200/1a1a2e/f8fafc?text=No+Image';">
+                <img src="${imageUrl}" alt="${title}" class="match-image" onerror="this.src='https://placehold.co/400x200/1a1a2e/f8fafc?text=Image+Error';">
                 <div class="match-details">
                     <span class="match-category">${category}</span>
                     <h3 class="match-title">${title}</h3>
@@ -1122,62 +1088,61 @@
                     </div>
                     <div class="teams-container">
                         <div class="team">
-                            <img src="${team1Flag}" alt="${team1Name}" class="team-flag" onerror="this.src='https://placehold.co/32/6b7280/f8fafc?text=?';">
                             <span class="team-name">${team1Name}</span>
                         </div>
                         <div class="team">
-                            <img src="${team2Flag}" alt="${team2Name}" class="team-flag" onerror="this.src='https://placehold.co/32/6b7280/f8fafc?text=?';">
                             <span class="team-name">${team2Name}</span>
                         </div>
                     </div>
                 </div>
             `;
             
-            // Add click event to show streaming options modal
-            card.addEventListener('click', () => {
-                currentMatch = match;
-                showStreamModal(match);
-            });
+            // Add click event, only if the match is live and has stream URLs
+            if (isLive && match.dai_url && match.adfree_url) {
+                card.addEventListener('click', () => {
+                    currentMatch = match;
+                    showStreamModal(match);
+                });
+            } else if (!isLive) {
+                card.style.cursor = 'default'; // Not clickable if upcoming
+                card.addEventListener('click', () => {
+                    // Maybe show a "coming soon" message
+                    console.log("This match is not live yet.");
+                });
+            }
             
             return card;
         }
         
         // Function to populate and show the stream modal
         function showStreamModal(match) {
-            const title = match.title || `${match.team1.name} vs ${match.team2.name}`;
-            const tournament = match.tour_name || 'Live Match';
+            // **** CORRECTED: Using correct data fields
+            const title = match.title || 'Live Stream';
+            const tournament = match.event_name || 'Live Event';
             
             modalTitle.textContent = title;
             modalTournament.textContent = tournament;
             
-            // Get the stream URL from the JSON structure
-            let streamUrl = null;
-            if (match.streaming_urls && match.streaming_urls.length > 0) {
-                // Find the first 'main' or 'hls' stream
-                const mainStream = match.streaming_urls.find(s => s.type === 'main' || s.type === 'hls');
-                if (mainStream) {
-                    streamUrl = mainStream.url;
-                } else {
-                    // Fallback to the first available URL
-                    streamUrl = match.streaming_urls[0].url; 
-                }
-            }
+            const normalStream = match.dai_url;
+            const adFreeStream = match.adfree_url;
             
-            if (streamUrl) {
-                // Encode the URL to be passed as a parameter
-                const encodedStreamUrl = encodeURIComponent(streamUrl);
+            if (normalStream && adFreeStream) {
+                // Encode the URLs to be passed as a parameter
+                const encodedNormalStream = encodeURIComponent(normalStream);
+                const encodedAdFreeStream = encodeURIComponent(adFreeStream);
                 
-                // Set the href for both buttons to point to player.html with the stream URL
-                worldwideBtn.href = `${worldwidePlayerUrl}?stream=${encodedStreamUrl}`;
-                indiaBtn.href = `${indiaPlayerUrl}?stream=${encodedStreamUrl}`;
+                // Set the href for both buttons
+                worldwideBtn.href = `${worldwidePlayerUrl}?stream=${encodedNormalStream}`;
+                indiaBtn.href = `${indiaPlayerUrl}?stream=${encodedAdFreeStream}`;
+                
+                // Make sure buttons are visible
+                worldwideBtn.style.display = 'flex';
+                indiaBtn.style.display = 'flex';
                 
                 modal.classList.add('show');
                 document.body.style.overflow = 'hidden';
             } else {
-                // Use a custom alert/modal in a real app, but alert is fine for this example
-                console.warn('Stream URL not available for this match:', title);
-                // In a real app, you'd show a prettier message
-                // For now, we just won't open the modal if no URL
+                console.warn('Stream URLs not available for this match:', title);
             }
         }
         
@@ -1191,21 +1156,18 @@
         closeModal.addEventListener('click', closeModalFunc);
         
         modal.addEventListener('click', (event) => {
-            // Close if clicked on the background overlay
             if (event.target === modal) {
                 closeModalFunc();
             }
         });
         
         refreshBtn.addEventListener('click', () => {
-            // Add spinning class for visual feedback
             const icon = refreshBtn.querySelector('i');
             icon.style.transition = 'transform 0.5s ease';
             icon.style.transform = 'rotate(360deg)';
             
             fetchAndRenderMatches();
             
-            // Remove spinning class after animation
             setTimeout(() => {
                 icon.style.transform = 'rotate(0deg)';
             }, 500);
@@ -1217,5 +1179,6 @@
     </script>
 </body>
 </html>
+
 
 
