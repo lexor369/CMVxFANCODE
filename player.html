@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMV LIVE PLAYER</title>
+    <!-- JW Player Library -->
+    <script src="https://cdn.jwplayer.com/libraries/KB5zFt7A.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        /* Player container */
+        #player-wrapper {
+            width: 100%;
+            height: 100%;
+            flex-grow: 1;
+            position: relative;
+        }
+
+        /* JW Player takes up the whole wrapper */
+        #player {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Back button styling */
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000; /* Ensures it's above the player controls */
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Back button to return to the main page -->
+    <a href="index.html" class="back-button">&larr; Back to Matches</a>
+
+    <!-- This wrapper contains the player -->
+    <div id="player-wrapper">
+        <!-- The JW Player will be injected here -->
+        <div id="player">Loading player...</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                // Get the stream URL from the query parameter
+                const urlParams = new URLSearchParams(window.location.search);
+                const streamUrl = urlParams.get('stream');
+
+                if (streamUrl) {
+                    // Decode the URL
+                    const decodedUrl = decodeURIComponent(streamUrl);
+
+                    // Set up the JW Player
+                    jwplayer("player").setup({
+                        file: decodedUrl,
+                        width: "100%",
+                        height: "100%",
+                        autostart: true,
+                        controls: true,
+                        pip: true, // Enable Picture-in-Picture
+                        aspectratio: "16:9"
+                    });
+                } else {
+                    // Handle case where no stream URL is provided
+                    document.getElementById('player').innerHTML = 'Error: No stream URL provided. <a href="index.html" style="color: #ff6b6b;">Go back</a>.';
+                }
+            } catch (e) {
+                console.error("Error setting up player:", e);
+                document.getElementById('player').innerHTML = 'Error: Could not load player. <a href="index.html" style="color: #ff6b6b;">Go back</a>.';
+            }
+        });
+    </script>
+
+</body>
+</html>
+
+
