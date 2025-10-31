@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CMV LIVE PLAYER</title>
-    <!-- JW Player Library -->
-    <script src="https://cdn.jwplayer.com/libraries/KB5zFt7A.js"></script>
+    
+    <!-- 
+      NEW: We are loading the hls.js library.
+      This library allows browsers that don't natively support HLS (like Chrome) to play .m3u8 files.
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
     <style>
         body {
             margin: 0;
@@ -28,8 +33,10 @@
             position: relative;
         }
 
-        /* JW Player takes up the whole wrapper */
-        #player {
+        /* NEW: We are using a standard HTML5 <video> tag.
+          hls.js will attach to this tag.
+        */
+        video {
             width: 100%;
             height: 100%;
         }
@@ -55,6 +62,15 @@
             background-color: rgba(255, 255, 255, 0.2);
             transform: scale(1.05);
         }
+
+        .error-message {
+            padding: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+        .error-message a {
+            color: #ff6b6b;
+        }
     </style>
 </head>
 <body>
@@ -64,43 +80,88 @@
 
     <!-- This wrapper contains the player -->
     <div id="player-wrapper">
-        <!-- The JW Player will be injected here -->
-        <div id="player">Loading player...</div>
+        <!-- 
+          NEW: This is the <video> tag hls.js will use.
+          We removed the old <div id="player"></div>
+        -->
+        <video id="video-player" controls autoplay></video>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const video = document.getElementById('video-player');
+            const wrapper = document.getElementById('player-wrapper');
+            
             try {
                 // Get the stream URL from the query parameter
                 const urlParams = new URLSearchParams(window.location.search);
                 const streamUrl = urlParams.get('stream');
 
                 if (streamUrl) {
-                    // Decode the URL
                     const decodedUrl = decodeURIComponent(streamUrl);
 
-                    // Set up the JW Player
-                    jwplayer("player").setup({
-                        file: decodedUrl,
-                        width: "100%",
-                        height: "100%",
-                        autostart: true,
-                        controls: true,
-                        pip: true, // Enable Picture-in-Picture
-                        aspectratio: "16:9"
-                    });
+                    // Check if Hls.js is supported in the browser
+                    if (Hls.isSupported()) {
+                        console.log("hls.js is supported. Attaching player.");
+                        const hls = new Hls();
+                        hls.loadSource(decodedUrl);
+                        hls.attachMedia(video);
+                        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                            video.play();
+                        });
+                        
+                        // Handle HLS.js errors
+                        hls.on(Hls.Events.ERROR, (event, data) => {
+                            if (data.fatal) {
+                                switch(data.type) {
+                                    case Hls.ErrorTypes.NETWORK_ERROR:
+                                        console.error('Fatal network error encountered:', data);
+                                        showError('Network error. Please check your connection or try again.');
+                                        break;
+                                    case Hls.ErrorTypes.MEDIA_ERROR:
+                                        console.error('Fatal media error encountered:', data);
+                                        showError('Media error. The stream may be corrupt or unsupported.');
+                                        hls.destroy();
+                                        break;
+                                    default:
+                                        console.error('An unknown fatal error occurred:', data);
+                                        showError('An unknown error occurred. The stream could not be played.');
+                                        hls.destroy();
+                                        break;
+                                }
+                            }
+                        });
+
+                    } 
+                    // Fallback for browsers that support HLS natively (like Safari)
+                    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                        console.log("Native HLS support found (e.g., Safari).");
+                        video.src = decodedUrl;
+                        video.addEventListener('loadedmetadata', () => {
+                            video.play();
+                        });
+                    } 
+                    // If no HLS support at all
+                    else {
+                        showError('Your browser does not support HLS video playback.');
+                    }
+
                 } else {
-                    // Handle case where no stream URL is provided
-                    document.getElementById('player').innerHTML = 'Error: No stream URL provided. <a href="index.html" style="color: #ff6b6b;">Go back</a>.';
+                    showError('Error: No stream URL provided. <a href="index.html">Go back</a>.');
                 }
             } catch (e) {
                 console.error("Error setting up player:", e);
-                document.getElementById('player').innerHTML = 'Error: Could not load player. <a href="index.html" style="color: #ff6b6b;">Go back</a>.';
+                showError('Error: Could not load player. <a href="index.html">Go back</a>.');
+            }
+
+            function showError(message) {
+                wrapper.innerHTML = `<div class="error-message">${message}</div>`;
             }
         });
     </script>
 
 </body>
 </html>
+
 
 
