@@ -2,164 +2,327 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- UPDATED: Title -->
     <title>CMV LIVE PLAYER</title>
-    
-    <!-- 
-      NEW: We are loading the hls.js library.
-      This library allows browsers that don't natively support HLS (like Chrome) to play .m3u8 files.
-    -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="referrer" content="no-referrer">
+    <link rel="icon" href="https://fancode.com/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --plyr-color-main: #0ea5e9;
+            --background-dark: #02040a;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            color: #fff;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            height: 100svh; 
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            width: 100vw;
+            background-color: var(--background-dark);
+            font-family: 'Inter', sans-serif;
+            color: white;
             overflow: hidden;
         }
-        
-        /* Player container */
-        #player-wrapper {
-            width: 100%;
-            height: 100%;
+        .player-header, .player-footer {
+            flex-shrink: 0;
+            padding: 1rem;
+            background-color: #0f172a;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .player-footer {
+            border-bottom: none;
+            border-top: 1px solid var(--border-color);
+        }
+        .player-main {
             flex-grow: 1;
-            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000;
+            min-height: 0;
         }
-
-        /* NEW: We are using a standard HTML5 <video> tag.
-          hls.js will attach to this tag.
-        */
-        video {
+        .plyr {
             width: 100%;
             height: 100%;
         }
-
-        /* Back button styling */
-        .back-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 1000; /* Ensures it's above the player controls */
-            background-color: rgba(0, 0, 0, 0.6);
-            color: white;
-            padding: 10px 15px;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+        .share-button {
+            background: linear-gradient(90deg, #f59e0b, #eab308);
+            color: black;
+            font-weight: bold;
+            box-shadow: 0 0 20px -5px rgba(234, 179, 8, 0.7);
             transition: all 0.3s ease;
         }
+        .share-button:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 30px -2px rgba(234, 179, 8, 0.9);
+        }
+        .telegram-btn {
+            background-color: #0ea5e9;
+            box-shadow: 0 0 15px -5px #0ea5e9;
+            transition: all 0.3s ease;
+        }
+        .telegram-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 25px -2px #0ea5e9;
+            background-color: #38bdf8;
+        }
         
-        .back-button:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
+        .popup-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0s 0.4s;
         }
-
-        .error-message {
-            padding: 20px;
+        .popup-overlay.show {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.4s ease;
+        }
+        .popup-card {
+            background-color: #1e293b; /* slate-800 */
+            border: 1px solid var(--border-color);
+            border-radius: 1.5rem; /* 24px */
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 400px;
+            padding: 2rem;
             text-align: center;
-            font-size: 1.2rem;
+            transform: scale(0.9) translateY(20px);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.215, 0.610, 0.355, 1), opacity 0.4s ease;
         }
-        .error-message a {
-            color: #ff6b6b;
+        .popup-overlay.show .popup-card {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+        .popup-join-btn {
+            background: linear-gradient(90deg, #22d3ee, #0ea5e9);
+        }
+        .error-message {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 2rem;
+            text-align: center;
+            font-size: 1.1rem;
         }
     </style>
 </head>
-<body>
+<body class="text-slate-200">
+    <header class="player-header text-center">
+        <!-- UPDATED: Default title -->
+        <h1 id="match-title" class="text-xl font-bold text-white truncate">CMV LIVE</h1>
+        <button id="share-links-btn" class="share-button w-full max-w-sm mx-auto mt-2 py-3 px-6 rounded-lg text-md">
+            <i class="fas fa-share-alt mr-2"></i> Share With Friends
+        </button>
+    </header>
+    <main class="player-main">
+        <video id="player" playsinline controls></video>
+    </main>
+    <footer class="player-footer text-center">
+        <!-- UPDATED: Telegram link and text -->
+        <a href="https://t.me/cricketmemesverse873" target="_blank" class="telegram-btn inline-flex items-center justify-center w-full max-w-sm mx-auto px-6 py-3 rounded-lg font-semibold text-black hover:text-white">
+            <i class="fab fa-telegram-plane mr-3"></i> Join CMV LIVE Channel
+        </a>
+    </footer>
     
-    <!-- Back button to return to the main page -->
-    <a href="index.html" class="back-button">&larr; Back to Matches</a>
-
-    <!-- This wrapper contains the player -->
-    <div id="player-wrapper">
-        <!-- 
-          NEW: This is the <video> tag hls.js will use.
-          We removed the old <div id="player"></div>
-        -->
-        <video id="video-player" controls autoplay></video>
+    <div id="telegram-popup" class="popup-overlay">
+        <div class="popup-card">
+            <div class="text-6xl mb-4 text-sky-400"><i class="fab fa-telegram"></i></div>
+            <!-- UPDATED: Text -->
+            <h3 class="text-2xl font-bold text-white mb-2">Join CMV LIVE!</h3>
+            <p class="text-slate-400 mb-6">
+                Join our Telegram channel for live updates and instant stream links.
+            </p>
+            <div class="flex flex-col gap-3">
+                <!-- UPDATED: Telegram link -->
+                <a href="https://t.me/cricketmemesverse873" target="_blank" id="popup-join-btn" class="popup-join-btn w-full text-center px-6 py-3 rounded-lg font-semibold text-white transition-transform transform hover:scale-105">
+                    <i class="fas fa-rocket mr-2"></i>Join Now
+                </a>
+                <button id="popup-close-btn" class="w-full text-center px-6 py-3 rounded-lg font-semibold text-slate-300 bg-slate-700 hover:bg-slate-600 transition-colors">
+                    Maybe Later
+                </button>
+            </div>
+        </div>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const video = document.getElementById('video-player');
-            const wrapper = document.getElementById('player-wrapper');
+        // UPDATED: JSON URL
+        const DATA_URL = 'https://raw.githubusercontent.com/Jitendra-unatti/fancode/refs/heads/main/data/fancode.json';
+        const playerElement = document.getElementById('player');
+        const shareLinksBtn = document.getElementById('share-links-btn');
+        const matchTitleElem = document.getElementById('match-title');
+        
+        async function getStreamAndMatchDetails(id, cdnKey) {
+            try {
+                const res = await fetch(DATA_URL + '?t=' + new Date().getTime()); // Cache buster
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const data = await res.json();
+                
+                // UPDATED: data is an array, not object
+                const match = data.find(m => String(m.match_id) === String(id));
+                
+                if (!match) throw new Error("Match not found for ID: " + id);
+                
+                const streamingCdn = { ...match.STREAMING_CDN };
+                delete streamingCdn.Primary_Playback_URL;
+                const sources = {
+                    adfree_stream: match.adfree_stream,
+                    dai_stream: match.dai_stream,
+                    ...streamingCdn
+                };
+                
+                const streamUrl = sources[cdnKey];
+                if (streamUrl && streamUrl !== "Unavailable") {
+                    return { streamUrl, match };
+                } else {
+                    throw new Error(`Stream for '${cdnKey}' is unavailable.`);
+                }
+            } catch (err) {
+                console.error("Error fetching stream data:", err);
+                return { streamUrl: null, match: null };
+            }
+        }
+        
+        function displayError(message) {
+            document.body.innerHTML = `
+                <div class="error-message">
+                    <h2 class="text-2xl font-bold text-red-500 mb-4">Stream Error</h2>
+                    <p class="text-slate-400">${message}</p>
+                    <a href="index.html" class="mt-6 px-6 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors">
+                        Go Back Home
+                    </a>
+                </div>`;
+        }
+        
+        function handlePopup() {
+            const popup = document.getElementById('telegram-popup');
+            const closeBtn = document.getElementById('popup-close-btn');
+            const joinBtn = document.getElementById('popup-join-btn');
+            const POPUP_KEY = 'playerTelegramPopupDismissed_CMV'; // UPDATED: Key
+            if (localStorage.getItem(POPUP_KEY)) {
+                popup.remove(); // Remove if already dismissed
+                return;
+            }
+            setTimeout(() => {
+                popup.classList.add('show');
+            }, 5000);
+            function dismissPopup() {
+                popup.classList.remove('show');
+                localStorage.setItem(POPUP_KEY, 'true');
+            }
+            closeBtn.addEventListener('click', dismissPopup);
+            joinBtn.addEventListener('click', () => {
+                setTimeout(dismissPopup, 300);
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get("id");
+            const cdn = urlParams.get("cdn");
+            if (!id || !cdn) {
+                displayError("Missing match ID or CDN information in the URL.");
+                return;
+            }
+            const { streamUrl, match } = await getStreamAndMatchDetails(id, cdn);
+            if (!streamUrl) {
+                displayError(`Sorry, this stream could not be loaded. It might be offline or unavailable.`);
+                return;
+            }
+            if (match) {
+                matchTitleElem.textContent = match.title || 'CMV LIVE'; // UPDATED: Default
+            }
+            
+            shareLinksBtn.addEventListener('click', async () => {
+                const shareData = {
+                    title: `Watch: ${match?.title || 'CMV LIVE Stream'}`,
+                    text: `Watch "${match?.title || 'Live Stream'}" on CMV LIVE!`, // UPDATED: Text
+                    url: window.location.href
+                };
+                try {
+                    if (navigator.share) {
+                        await navigator.share(shareData);
+                    } else {
+                        await navigator.clipboard.writeText(window.location.href);
+                        alert('Link copied to clipboard!');
+                    }
+                } catch (err) {
+                    console.error('Share failed:', err);
+                    alert('Could not share. Please copy the link manually.');
+                }
+            });
             
             try {
-                // Get the stream URL from the query parameter
-                const urlParams = new URLSearchParams(window.location.search);
-                const streamUrl = urlParams.get('stream');
-
-                if (streamUrl) {
-                    const decodedUrl = decodeURIComponent(streamUrl);
-
-                    // Check if Hls.js is supported in the browser
-                    if (Hls.isSupported()) {
-                        console.log("hls.js is supported. Attaching player.");
-                        const hls = new Hls();
-                        hls.loadSource(decodedUrl);
-                        hls.attachMedia(video);
-                        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                            video.play();
-                        });
-                        
-                        // Handle HLS.js errors
-                        hls.on(Hls.Events.ERROR, (event, data) => {
-                            if (data.fatal) {
-                                switch(data.type) {
-                                    case Hls.ErrorTypes.NETWORK_ERROR:
-                                        console.error('Fatal network error encountered:', data);
-                                        showError('Network error. Please check your connection or try again.');
-                                        break;
-                                    case Hls.ErrorTypes.MEDIA_ERROR:
-                                        console.error('Fatal media error encountered:', data);
-                                        showError('Media error. The stream may be corrupt or unsupported.');
-                                        hls.destroy();
-                                        break;
-                                    default:
-                                        console.error('An unknown fatal error occurred:', data);
-                                        showError('An unknown error occurred. The stream could not be played.');
-                                        hls.destroy();
-                                        break;
-                                }
-                            }
-                        });
-
-                    } 
-                    // Fallback for browsers that support HLS natively (like Safari)
-                    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                        console.log("Native HLS support found (e.g., Safari).");
-                        video.src = decodedUrl;
-                        video.addEventListener('loadedmetadata', () => {
-                            video.play();
-                        });
-                    } 
-                    // If no HLS support at all
-                    else {
-                        showError('Your browser does not support HLS video playback.');
+                const player = new Plyr(playerElement, { 
+                    autoplay: true,
+                    // Quality options will be added by HLS.js if available
+                    quality: {
+                        default: 720, // Default fallback
+                        options: [4320, 2160, 1440, 1080, 720, 576, 480, 360, 240], // Provide all options
                     }
+                });
+                
+                if (streamUrl.includes('.m3u8') && Hls.isSupported()) {
+                    const hls = new Hls();
+                    hls.loadSource(streamUrl);
+                    hls.attachMedia(playerElement);
+                    
+                    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                        // Dynamically update qualities based on manifest
+                        const availableQualities = hls.levels.map((l) => l.height).filter((q, i, a) => a.indexOf(q) === i); // Unique
+                        
+                        player.config.quality = {
+                            default: availableQualities[0] || 720,
+                            options: availableQualities,
+                            forced: true,
+                            onChange: (newQuality) => {
+                                hls.currentLevel = hls.levels.findIndex((level) => level.height === newQuality);
+                            },
+                        };
+                        
+                        player.play().catch(e => console.warn("Autoplay was blocked.", e));
+                    });
 
+                    hls.on(Hls.Events.ERROR, function(event, data) {
+                        if (data.fatal) {
+                            console.error('Fatal HLS error:', data);
+                            displayError('This stream is unavailable. It might be offline or protected (CORS error).');
+                        }
+                    });
+
+                } else if (playerElement.canPlayType('application/vnd.apple.mpegurl')) {
+                    // Native HLS support (e.g., Safari)
+                    playerElement.src = streamUrl;
+                    player.play().catch(e => console.warn("Autoplay was blocked.", e));
                 } else {
-                    showError('Error: No stream URL provided. <a href="index.html">Go back</a>.');
+                    // Other formats
+                    playerElement.src = streamUrl;
+                    player.play().catch(e => console.warn("Autoplay was blocked.", e));
                 }
-            } catch (e) {
-                console.error("Error setting up player:", e);
-                showError('Error: Could not load player. <a href="index.html">Go back</a>.');
+            } catch (error) {
+                console.error("Player initialization error:", error);
+                displayError("A player error occurred. Please try another stream.");
             }
-
-            function showError(message) {
-                wrapper.innerHTML = `<div class="error-message">${message}</div>`;
-            }
+            
+            handlePopup();
         });
     </script>
-
 </body>
 </html>
 
